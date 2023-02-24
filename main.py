@@ -1,10 +1,17 @@
+from aiogram import types, utils, executor
+
+from create_bot import dp
 
 
-TOKEN = None
+async def on_startup(_):
+    print('The bot has started')
 
-with open("token.txt") as f:
-    TOKEN = f.read().strip()
+
+from handlers import client, admin, other
+
+client.client_handler_register(dp)
+
+other.other_handler_register(dp)  # ниже всех других handler's
 
 if __name__ == '__main__':
-   print(TOKEN)
-
+    executor.start_polling(dp, on_startup=on_startup, skip_updates=True)
