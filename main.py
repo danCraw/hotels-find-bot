@@ -1,6 +1,10 @@
 from aiogram import types, utils, executor
 from create_bot import dp
 
+from geopy.geocoders import Yandex
+from config import TOKEN, YANDEX_API
+
+geolocator = Yandex(YANDEX_API)
 
 async def on_startup(_):
     print('The bot has started')

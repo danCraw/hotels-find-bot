@@ -14,12 +14,6 @@ async def get_info(message: types.Message):
 
 '''MY LOCATION'''
 
-# def get_keyboard():
-#     keyboard = types.ReplyKeyboardMarkup()
-#     button = types.KeyboardButton("Share Position", request_location=True)
-#     keyboard.add(button)
-#     return keyboard
-# @dp.message_handler(content_types=['location'])
 
 # @dp.message_handler(content_types=['location'])
 async def my_location(message: types.Message):
