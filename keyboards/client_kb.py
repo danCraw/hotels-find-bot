@@ -1,12 +1,13 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 
-b1 = KeyboardButton('/info')
-# b2 = KeyboardButton('/locate')
+b_info = KeyboardButton('/info')
+b_start_path_script = KeyboardButton('/go')
+# b_location = KeyboardButton('/locate', request_location=True)
 
 b_phone = KeyboardButton('Phone', request_contact=True)
-b_location = KeyboardButton('My location', request_location=True)
+# b_location = KeyboardButton('My location', request_location=True)
 
 
 
 kb_client = ReplyKeyboardMarkup(resize_keyboard=True)
-kb_client.add(b1).row(b_phone, b_location)
+kb_client.add(b_info).row(b_start_path_script)

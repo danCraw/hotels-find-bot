@@ -4,8 +4,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-context/token.txt
-
+config
 # C extensions
 *.so
 
