@@ -45,7 +45,8 @@ async def user_loc(message: types.Message):
     await FSMClient.point.set()
     b_location = KeyboardButton('/locate', request_location=True)
     kb_client.add(b_location)
-    await message.answer('Пожалуйста, нажмите кнопку "/locate", чтобы поделиться своей геопозицией', reply_markup=kb_client)
+    await message.answer('Пожалуйста, введите город отправления '
+                         'или поделитесь своей геопозицией, нажав на кнопку  "locate", чтобы ', reply_markup=kb_client)
 
 @dp.message_handler(state='*', commands='отмена')
 @dp.message_handler(Text(equals='отмена', ignore_case=True), state='*')
@@ -56,6 +57,12 @@ async def cansel_handler(message: types.Message, state: FSMContext):
     await state.finish()
     await message.reply('отмена')
 
+@dp.message_handler(state=FSMClient.point)
+async def send_city(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['point'] = message.text
+    await FSMClient.next()
+    await message.answer('Введите город, в который Вы едете')
 
 @dp.message_handler(state=FSMClient.point, content_types=['location'])
 async def user_location(message: types.Message, state: FSMContext):
@@ -86,8 +93,7 @@ async def send_travel_time(message: types.Message, state: FSMContext):
         await bot.send_message(
             message.from_user.id,
             md.text(
-                md.text(data['point']['lat']),
-                md.text(data['point']['lon']),
+                md.text(data['point']),
                 md.text(data['destination_city']),
                 md.text(data['travel_time']),
                 sep='\n',
