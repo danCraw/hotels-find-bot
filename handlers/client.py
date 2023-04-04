@@ -9,6 +9,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 import aiogram.utils.markdown as md
 from calculations import *
 
+
 @dp.message_handler(commands=['start', 'help'])
 async def start_command(message: types.Message):
     await bot.send_message(message.from_user.id,
@@ -36,7 +37,6 @@ class FSMClient(StatesGroup):
     # route_data = State()
 
 
-
 @dp.message_handler(commands=['go'], state=None)
 async def user_loc(message: types.Message):
     # if LAT is None or LON is None:
@@ -53,6 +53,7 @@ async def user_loc(message: types.Message):
                          'или поделитесь своей геопозицией, нажав на кнопку  "locate". '
                          'Чтобы выйти, нажмите или введите"cancel" ', reply_markup=markup)
 
+
 @dp.message_handler(state='*', commands='cancel')
 @dp.message_handler(Text(equals='cancel', ignore_case=True), state='*')
 async def cansel_handler(message: types.Message, state: FSMContext):
@@ -62,12 +63,14 @@ async def cansel_handler(message: types.Message, state: FSMContext):
     await state.finish()
     await message.reply('отмена')
 
-# @dp.message_handler(state=FSMClient.point)
-# async def send_city(message: types.Message, state: FSMContext):
-#     async with state.proxy() as data:
-#         data['point'] = message.text
-#     await FSMClient.next()
-#     await message.answer('Введите город, в который Вы едете')
+
+@dp.message_handler(state=FSMClient.point)
+async def send_city(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        from_coords = city_geocoding(message.text)
+        data['point'] = from_coords
+    await FSMClient.next()
+    await message.answer('Введите город, в который Вы едете')
 
 @dp.message_handler(state=FSMClient.point, content_types=['location'])
 async def user_location(message: types.Message, state: FSMContext):
@@ -80,11 +83,12 @@ async def user_location(message: types.Message, state: FSMContext):
     await message.answer('Введите город, в который Вы едете')
     # await bot.send_message(message.from_user.id, coordinates)
 
+
 @dp.message_handler(state=FSMClient.destination_city)
 async def send_city(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         to_coords = city_geocoding(message.text)
-        data['destination_city'] = {'city': message.text,'lat': to_coords['lat'], 'lon': to_coords['lon']}
+        data['destination_city'] = {'city': message.text, 'lat': to_coords['lat'], 'lon': to_coords['lon']}
     await FSMClient.next()
     await message.reply('Далее введите время (в часах или минутах), через которое хотите остановиться в '
                         'отеле. Например: "3 часа" или "56 минут" или "5 часов 42 минуты".')
@@ -101,19 +105,22 @@ async def send_travel_time(message: types.Message, state: FSMContext):
             data['travel_time'] = travel_time
     async with state.proxy() as data:
         # to_coords = city_geocoding(data['destination_city'])
-        build_route(data['point']['lat'], data['point']['lon'], data['destination_city']['lat'], data['destination_city']['lon'])
-        await bot.send_message(
-            message.from_user.id,
-            md.text(
-                md.text(data['point']),
-                md.text(data['destination_city']),
-                md.text(data['travel_time']),
-                sep='\n',
-            ), reply_markup=kb_client
-        )
+        path_data = build_route(data['point']['lat'], data['point']['lon'], data['destination_city']['lat'],
+                                data['destination_city']['lon'])
+        point = find_coordinates_by_time(data['travel_time'], path_data)
+        hotels = find_hotel_by_coordinates(point)
+        # await bot.send_message(
+        #     message.from_user.id,
+        #     md.text(
+        #         md.text(data['point']),
+        #         md.text(data['destination_city']),
+        #         md.text(data['travel_time']),
+        #         sep='\n',
+        #     ), reply_markup=kb_client
+        # )
+        for hotel in hotels:
+            await bot.send_message(message.from_user.id, hotel)
     await state.finish()
-
-
 
 
 # @dp.message_handler(content_types=['location'])
