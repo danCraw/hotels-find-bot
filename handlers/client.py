@@ -7,7 +7,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 import aiogram.utils.markdown as md
-
+from calculations import *
 
 @dp.message_handler(commands=['start', 'help'])
 async def start_command(message: types.Message):
@@ -33,6 +33,7 @@ class FSMClient(StatesGroup):
     point = State()
     destination_city = State()
     travel_time = State()
+    # route_data = State()
 
 
 
@@ -44,12 +45,16 @@ async def user_loc(message: types.Message):
     #     return
     await FSMClient.point.set()
     b_location = KeyboardButton('/locate', request_location=True)
-    kb_client.add(b_location)
-    await message.answer('Пожалуйста, введите город отправления '
-                         'или поделитесь своей геопозицией, нажав на кнопку  "locate", чтобы ', reply_markup=kb_client)
+    b_cancel = KeyboardButton('/cancel')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add(b_location, b_cancel)
 
-@dp.message_handler(state='*', commands='отмена')
-@dp.message_handler(Text(equals='отмена', ignore_case=True), state='*')
+    await message.answer('Пожалуйста, введите город отправления '
+                         'или поделитесь своей геопозицией, нажав на кнопку  "locate". '
+                         'Чтобы выйти, нажмите или введите"cancel" ', reply_markup=markup)
+
+@dp.message_handler(state='*', commands='cancel')
+@dp.message_handler(Text(equals='cancel', ignore_case=True), state='*')
 async def cansel_handler(message: types.Message, state: FSMContext):
     cur_state = await state.get_state()
     if cur_state is None:
@@ -57,12 +62,12 @@ async def cansel_handler(message: types.Message, state: FSMContext):
     await state.finish()
     await message.reply('отмена')
 
-@dp.message_handler(state=FSMClient.point)
-async def send_city(message: types.Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['point'] = message.text
-    await FSMClient.next()
-    await message.answer('Введите город, в который Вы едете')
+# @dp.message_handler(state=FSMClient.point)
+# async def send_city(message: types.Message, state: FSMContext):
+#     async with state.proxy() as data:
+#         data['point'] = message.text
+#     await FSMClient.next()
+#     await message.answer('Введите город, в который Вы едете')
 
 @dp.message_handler(state=FSMClient.point, content_types=['location'])
 async def user_location(message: types.Message, state: FSMContext):
@@ -78,18 +83,25 @@ async def user_location(message: types.Message, state: FSMContext):
 @dp.message_handler(state=FSMClient.destination_city)
 async def send_city(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['destination_city'] = message.text
+        to_coords = city_geocoding(message.text)
+        data['destination_city'] = {'city': message.text,'lat': to_coords['lat'], 'lon': to_coords['lon']}
     await FSMClient.next()
     await message.reply('Далее введите время (в часах или минутах), через которое хотите остановиться в '
-                        'отеле.Например: "3 часа" или "56 минут"')
+                        'отеле. Например: "3 часа" или "56 минут" или "5 часов 42 минуты".')
 
 
 @dp.message_handler(state=FSMClient.travel_time)
 async def send_travel_time(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['travel_time'] = message.text
-
+        travel_time = time_from_text_to_seconds(message.text)
+        if travel_time == 0:
+            await bot.send_message(message.from_user.id, 'Пожалуйста, введите данные в верном формате')
+            return
+        else:
+            data['travel_time'] = travel_time
     async with state.proxy() as data:
+        # to_coords = city_geocoding(data['destination_city'])
+        build_route(data['point']['lat'], data['point']['lon'], data['destination_city']['lat'], data['destination_city']['lon'])
         await bot.send_message(
             message.from_user.id,
             md.text(
@@ -97,7 +109,7 @@ async def send_travel_time(message: types.Message, state: FSMContext):
                 md.text(data['destination_city']),
                 md.text(data['travel_time']),
                 sep='\n',
-            ),
+            ), reply_markup=kb_client
         )
     await state.finish()
 
