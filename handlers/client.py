@@ -61,13 +61,13 @@ async def cansel_handler(message: types.Message, state: FSMContext):
     if cur_state is None:
         return
     await state.finish()
-    await message.reply('отмена')
+    await message.reply('cancel')
 
 
 @dp.message_handler(state=FSMClient.point)
 async def send_city(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        from_coords = city_geocoding(message.text)
+        from_coords = yandex_city_geocoding(message.text)
         data['point'] = from_coords
     await FSMClient.next()
     await message.answer('Введите город, в который Вы едете')
@@ -87,7 +87,7 @@ async def user_location(message: types.Message, state: FSMContext):
 @dp.message_handler(state=FSMClient.destination_city)
 async def send_city(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        to_coords = city_geocoding(message.text)
+        to_coords = yandex_city_geocoding(message.text)
         data['destination_city'] = {'city': message.text, 'lat': to_coords['lat'], 'lon': to_coords['lon']}
     await FSMClient.next()
     await message.reply('Далее введите время (в часах или минутах), через которое хотите остановиться в '
@@ -118,6 +118,7 @@ async def send_travel_time(message: types.Message, state: FSMContext):
         #         sep='\n',
         #     ), reply_markup=kb_client
         # )
+        await bot.send_message(message.from_user.id, "Гостиницы, которые я нашел", reply_markup=kb_client)
         for hotel in hotels:
             await bot.send_message(message.from_user.id, hotel)
     await state.finish()

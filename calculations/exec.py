@@ -1,20 +1,32 @@
 import requests
 import json
-from config import OPEN_ROUTE_SERVICE_API_KEY, YANDEX_SEARCH_API_KEY
+from config import YANDEX_API, OPEN_ROUTE_SERVICE_API_KEY, YANDEX_SEARCH_API_KEY
 
 payload = {}
 headers = {}
 
 
-def city_geocoding(city: str) -> dict:
-    city_geocode_url = f'https://api.openrouteservice.org/geocode/search?api_key={OPEN_ROUTE_SERVICE_API_KEY}&text={city}'
+# def openrouteservice_city_geocoding(city: str) -> dict:
+#     city_geocode_url = f'https://api.openrouteservice.org/geocode/search?api_key={OPEN_ROUTE_SERVICE_API_KEY}&text={city}'
+#     response = requests.request("GET", city_geocode_url, headers=headers, data=payload)
+#     with open('./calculations/path_data/openrouteservice_city.json', 'w') as outfile:
+#         outfile.write(response.text)
+#     # with open('./calculations/path_data/openrouteserviceCity.json') as json_file:
+#     #     all_data = json.load(json_file)
+#     all_data = json.loads(response.text)
+#     coords = all_data['features'][0]['geometry']['coordinates']
+#     coordinates = {'lat': coords[1], 'lon': coords[0]}  # в openrouteservice сначала lon, затем lat
+#     return coordinates
+
+def yandex_city_geocoding(city: str) -> dict:
+    city_geocode_url = f'https://geocode-maps.yandex.ru/1.x/?apikey={YANDEX_API}&geocode={city}&format=json'
     response = requests.request("GET", city_geocode_url, headers=headers, data=payload)
-    # with open('./calculations/path_data/openrouteserviceCity.json', 'w') as outfile:
-    #     outfile.write(response.text)
+    with open('./calculations/path_data/yandex_city.json', 'w') as outfile:
+        outfile.write(response.text)
     # with open('./calculations/path_data/openrouteserviceCity.json') as json_file:
     #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
-    coords = all_data['features'][0]['geometry']['coordinates']
+    coords = str(all_data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos']).split()
     coordinates = {'lat': coords[1], 'lon': coords[0]}  # в openrouteservice сначала lon, затем lat
     return coordinates
 
@@ -43,8 +55,8 @@ def build_route(lat_from, lon_from, lat_to, lon_to):
     # lon_to = to_coords['lon']
     path_url = f'https://api.openrouteservice.org/v2/directions/driving-car?api_key={OPEN_ROUTE_SERVICE_API_KEY}&start={lon_from},{lat_from}&end={lon_to},{lat_to}'
     response = requests.request("GET", path_url, headers=headers, data=payload)
-    # with open('./calculations/path_data/testVRN_SOCHI.json', 'w') as outfile:
-    #     outfile.write(response.text)
+    with open('./calculations/path_data/route.json', 'w') as outfile:
+        outfile.write(response.text)
     # with open('./calculations/path_data/testVRN_SOCHI.json') as json_file:
     #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
@@ -100,8 +112,8 @@ def find_hotel_by_coordinates(point: dict):
     lat, lon = point['lat'], point['lon']
     url = f'https://search-maps.yandex.ru/v1/?text=hotel&ll={lon},{lat}&lang=ru_RU&apikey={YANDEX_SEARCH_API_KEY}'
     response = requests.request("GET", url, headers=headers, data=payload)
-    # with open('./calculations/path_data/testVRN_SOCHI_HOTELS_ER.json', 'w') as outfile:
-    #     outfile.write(response.text)
+    with open('./calculations/path_data/hotels.json', 'w') as outfile:
+        outfile.write(response.text)
     # with open('./calculations/path_data/testVRN_SOCHI_HOTELS.json') as json_file:
     #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
@@ -124,8 +136,9 @@ def find_hotel_by_coordinates(point: dict):
                 number = phone['formatted']
                 hotel_phones.append(number)
             hotel['phones'] = hotel_phones
-        hotel_hours = hotel_data['Hours']['text']
-        hotel['hours'] = hotel_hours
+        if 'Hours' in hotel_data:
+            hotel_hours = hotel_data['Hours']['text']
+            hotel['hours'] = hotel_hours
         hotels.append(hotel)
     return hotels
 
