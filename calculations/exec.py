@@ -21,14 +21,18 @@ headers = {}
 def yandex_city_geocoding(city: str) -> dict:
     city_geocode_url = f'https://geocode-maps.yandex.ru/1.x/?apikey={YANDEX_API}&geocode={city}&format=json'
     response = requests.request("GET", city_geocode_url, headers=headers, data=payload)
+    if response.status_code != 200:
+        print("Error while city geocoding")
+        return {}
     with open('./calculations/path_data/yandex_city.json', 'w') as outfile:
         outfile.write(response.text)
-    # with open('./calculations/path_data/openrouteserviceCity.json') as json_file:
+    # with open('./calculations/path_data/yandex_city.json') as json_file:
     #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
     coords = str(all_data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos']).split()
     coordinates = {'lat': coords[1], 'lon': coords[0]}  # в openrouteservice сначала lon, затем lat
     return coordinates
+
 
 def time_from_text_to_seconds(time: str):
     words = time.split()
@@ -47,7 +51,6 @@ def time_from_text_to_seconds(time: str):
         return time_in_seconds
 
 
-
 def build_route(lat_from, lon_from, lat_to, lon_to):
     # lat_from = from_coords['lat']
     # lon_from = from_coords['lon']
@@ -55,9 +58,12 @@ def build_route(lat_from, lon_from, lat_to, lon_to):
     # lon_to = to_coords['lon']
     path_url = f'https://api.openrouteservice.org/v2/directions/driving-car?api_key={OPEN_ROUTE_SERVICE_API_KEY}&start={lon_from},{lat_from}&end={lon_to},{lat_to}'
     response = requests.request("GET", path_url, headers=headers, data=payload)
+    if response.status_code != 200:
+        print("Error while build route")
+        return
     with open('./calculations/path_data/route.json', 'w') as outfile:
         outfile.write(response.text)
-    # with open('./calculations/path_data/testVRN_SOCHI.json') as json_file:
+    # with open('./calculations/path_data/route.json') as json_file:
     #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
     features = all_data['features']
@@ -76,6 +82,8 @@ def build_route(lat_from, lon_from, lat_to, lon_to):
 
 def find_coordinates_by_time(time: int,
                              route_data) -> []:  # возвращает координаты, где примерно будет пользователь через время time
+    if time > route_data['duration']:
+        return []
     cur_time = 0
     path_steps = route_data['steps']
     path_coords = route_data['coordinates']
@@ -108,13 +116,17 @@ def find_coordinates_by_time(time: int,
     print(f'coord: {coordinates}')
     return coordinates
 
-def find_hotel_by_coordinates(point: dict):
+
+def find_hotels_by_coordinates(point: dict):
     lat, lon = point['lat'], point['lon']
     url = f'https://search-maps.yandex.ru/v1/?text=hotel&ll={lon},{lat}&lang=ru_RU&apikey={YANDEX_SEARCH_API_KEY}'
     response = requests.request("GET", url, headers=headers, data=payload)
+    if response.status_code != 200:
+        print("Error while find hotels")
+        return
     with open('./calculations/path_data/hotels.json', 'w') as outfile:
         outfile.write(response.text)
-    # with open('./calculations/path_data/testVRN_SOCHI_HOTELS.json') as json_file:
+    # with open('./calculations/path_data/hotels.json') as json_file:
     #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
     # print(all_data)
@@ -141,4 +153,3 @@ def find_hotel_by_coordinates(point: dict):
             hotel['hours'] = hotel_hours
         hotels.append(hotel)
     return hotels
-
