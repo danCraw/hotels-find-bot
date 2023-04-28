@@ -8,7 +8,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 import aiogram.utils.markdown as md
 from calculations import *
-
+from time import sleep
 
 @dp.message_handler(commands=['start', 'help'])
 async def start_command(message: types.Message):
@@ -24,7 +24,7 @@ async def start_command(message: types.Message):
 
 @dp.message_handler(commands=['info'])
 async def get_info(message: types.Message):
-    await bot.send_message(message.from_user.id, "some info")
+    await bot.send_message(message.from_user.id, "Обещаю вывести что-нибудь еще")
 
 
 '''USER LOCATION'''
@@ -39,10 +39,6 @@ class FSMClient(StatesGroup):
 
 @dp.message_handler(commands=['go'], state=None)
 async def user_loc(message: types.Message):
-    # if LAT is None or LON is None:
-    #     await bot.send_message(message.from_user.id,
-    #                            'Пожалуйста, введите свое местоположение, нажав на кнопку My location')
-    #     return
     await FSMClient.point.set()
     b_location = KeyboardButton('/locate', request_location=True)
     b_cancel = KeyboardButton('/cancel')
@@ -99,7 +95,11 @@ async def send_travel_time(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         travel_time = time_from_text_to_seconds(message.text)
         if travel_time == 0:
-            await bot.send_message(message.from_user.id, 'Пожалуйста, введите данные в верном формате')
+            await bot.send_message(message.from_user.id, 'Пожалуйста, введите данные в верном формате. Возможно, '
+                                                         'Вы пытаетесь отправить боту свою геолокацию, '
+                                                         'используя устройство, с которого это сделать нельзя, '
+                                                         'например компьютер или ноутбук. В таком случае введите '
+                                                         'город отправления самостоятельно')
             return
         else:
             data['travel_time'] = travel_time
@@ -108,7 +108,10 @@ async def send_travel_time(message: types.Message, state: FSMContext):
         path_data = build_route(data['point']['lat'], data['point']['lon'], data['destination_city']['lat'],
                                 data['destination_city']['lon'])
         point = find_coordinates_by_time(data['travel_time'], path_data)
-        hotels = find_hotel_by_coordinates(point)
+        if len(point) == 0:
+            await bot.send_message(message.from_user.id, f'Похоже Вы ввели слишком большое значение времени, '
+                                                         f'Ваш путь занимает немного меньше и составляет: {path_data["duration"]}')
+        hotels = find_hotels_by_coordinates(point)
         # await bot.send_message(
         #     message.from_user.id,
         #     md.text(
@@ -118,9 +121,20 @@ async def send_travel_time(message: types.Message, state: FSMContext):
         #         sep='\n',
         #     ), reply_markup=kb_client
         # )
-        await bot.send_message(message.from_user.id, "Гостиницы, которые я нашел", reply_markup=kb_client)
+        await bot.send_message(message.from_user.id, "Гостиницы, которые я нашел:", reply_markup=kb_client)
         for hotel in hotels:
-            await bot.send_message(message.from_user.id, hotel)
+            url = hotel['url'] if 'url' in hotel else 'url отсутствует'
+            phones = hotel['phones'] if 'phones' in hotel else 'phones отсутствуют'
+            hours = hotel['hours'] if 'hours'in hotel else 'hours отсутствуют'
+            await bot.send_message(message.from_user.id, md.text(
+                md.text(f'Название: {hotel["name"]}'),
+                md.text(f'Адрес: {hotel["address"]}'),
+                md.text(f'Сайт: {url}'),
+                md.text(f'Телефон: {phones}'),
+                md.text(f'Часы работы: {hours}'),
+                sep='\n',
+            ))
+            sleep(0.2)
     await state.finish()
 
 
