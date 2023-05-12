@@ -1,4 +1,6 @@
 import json
+import time
+
 from aiogram import types, Dispatcher
 from create_bot import bot, dp
 from aiogram.types import KeyboardButton
@@ -8,6 +10,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 import aiogram.utils.markdown as md
 from calculations import *
+from time import sleep
 
 
 @dp.message_handler(commands=['start', 'help'])
@@ -68,7 +71,7 @@ async def cansel_handler(message: types.Message, state: FSMContext):
 async def send_city(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         from_coords = yandex_city_geocoding(message.text)
-        data['point'] = from_coords
+        data['point'] = {'city': message.text, 'lat': from_coords['lat'], 'lon': from_coords['lon']}
     await FSMClient.next()
     await message.answer('Введите город, в который Вы едете')
 
@@ -76,9 +79,10 @@ async def send_city(message: types.Message, state: FSMContext):
 async def user_location(message: types.Message, state: FSMContext):
     lat = message.location.latitude
     lon = message.location.longitude
-    coordinates = f"latitude:{lat}\nlongitude:{lon}"
+    city = yandex_reverse_geocoding(lon=lon, lat=lat)
+    # coordinates = f"latitude:{lat}\nlongitude:{lon}"
     async with state.proxy() as data:
-        data['point'] = {'lat': lat, 'lon': lon}
+        data['point'] = {'city': city, 'lat': lat, 'lon': lon}
     await FSMClient.next()
     await message.answer('Введите город, в который Вы едете')
     # await bot.send_message(message.from_user.id, coordinates)
@@ -104,23 +108,35 @@ async def send_travel_time(message: types.Message, state: FSMContext):
         else:
             data['travel_time'] = travel_time
     async with state.proxy() as data:
-        # to_coords = city_geocoding(data['destination_city'])
         path_data = build_route(data['point']['lat'], data['point']['lon'], data['destination_city']['lat'],
                                 data['destination_city']['lon'])
         point = find_coordinates_by_time(data['travel_time'], path_data)
+        time_duration = time.strftime("%H:%M", time.gmtime(path_data['duration']))
+        time_duration = time_duration.split(':')
+        await bot.send_message(message.from_user.id, md.text(
+            md.text(f"Ваш маршрут из: {data['point']['city']}"),
+            md.text(f"в: {data['destination_city']['city']}"),
+            md.text(f"протяженностью: {path_data['length']/1000} км,"),
+            md.text(f"занимает {time_duration[0][1]} ч. {time_duration[1][1]} мин."),
+            sep='\n'
+        ))
+        sleep(3)
         hotels = find_hotel_by_coordinates(point)
-        # await bot.send_message(
-        #     message.from_user.id,
-        #     md.text(
-        #         md.text(data['point']),
-        #         md.text(data['destination_city']),
-        #         md.text(data['travel_time']),
-        #         sep='\n',
-        #     ), reply_markup=kb_client
-        # )
         await bot.send_message(message.from_user.id, "Гостиницы, которые я нашел", reply_markup=kb_client)
         for hotel in hotels:
-            await bot.send_message(message.from_user.id, hotel)
+            url = hotel['url'] if 'url' in hotel else 'отсутствует'
+            phones = hotel['phones'] if 'phones' in hotel else 'отсутствуют'
+            hours = hotel['hours'] if 'hours' in hotel else 'отсутствуют'
+            await bot.send_message(message.from_user.id, md.text(
+                md.text(f'Название: {hotel["name"]}'),
+                md.text(f'Адрес: {hotel["address"]}'),
+                md.text(f'Сайт: {url}'),
+                md.text(f'Телефон: {phones}'),
+                md.text(f'Часы работы: {hours}'),
+                sep='\n',
+            ))
+            # await bot.send_message(message.from_user.id, hotel)
+            sleep(0.5)
     await state.finish()
 
 
