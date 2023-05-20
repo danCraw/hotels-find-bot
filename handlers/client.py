@@ -113,10 +113,11 @@ async def send_travel_time(message: types.Message, state: FSMContext):
         point = find_coordinates_by_time(data['travel_time'], path_data)
         time_duration = time.strftime("%H:%M", time.gmtime(path_data['duration']))
         time_duration = time_duration.split(':')
+        full_length = round(path_data['length']/1000, 3)
         await bot.send_message(message.from_user.id, md.text(
             md.text(f"Ваш маршрут из: {data['point']['city']}"),
             md.text(f"в: {data['destination_city']['city']}"),
-            md.text(f"протяженностью: {path_data['length']/1000} км,"),
+            md.text(f"протяженностью: {full_length} км,"),
             md.text(f"занимает {time_duration[0][1]} ч. {time_duration[1][1]} мин."),
             sep='\n'
         ))

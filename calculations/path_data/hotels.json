@@ -1,0 +1,558 @@
+{
+  "type": "FeatureCollection",
+  "properties": {
+    "ResponseMetaData": {
+      "SearchResponse": {
+        "found": 10,
+        "display": "multiple",
+        "boundedBy": [
+          [
+            38.01967258,
+            52.99623026
+          ],
+          [
+            38.31850542,
+            53.17571371
+          ]
+        ]
+      },
+      "SearchRequest": {
+        "request": "hotel",
+        "skip": 0,
+        "results": 10,
+        "boundedBy": [
+          [
+            37.048427,
+            55.43644866
+          ],
+          [
+            38.175903,
+            56.04690174
+          ]
+        ]
+      }
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.114135,
+          53.128244
+        ]
+      },
+      "properties": {
+        "name": "Сильф",
+        "description": "Дачная ул., 4А, Ефремов, Россия",
+        "boundedBy": [
+          [
+            38.109903,
+            53.125679
+          ],
+          [
+            38.118114,
+            53.130618
+          ]
+        ],
+        "CompanyMetaData": {
+          "id": "140933786243",
+          "name": "Сильф",
+          "address": "Тульская область, Ефремов, Дачная улица, 4А",
+          "url": "http://silf-hotel.ru/",
+          "Phones": [
+            {
+              "type": "phone",
+              "formatted": "+7 (950) 903-19-20"
+            }
+          ],
+          "Categories": [
+            {
+              "class": "hotels",
+              "name": "Гостиница"
+            }
+          ],
+          "Hours": {
+            "text": "ежедневно, круглосуточно",
+            "Availabilities": [
+              {
+                "TwentyFourHours": true,
+                "Everyday": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.117726,
+          53.146004
+        ]
+      },
+      "properties": {
+        "name": "Красивая Меча",
+        "description": "ул. Ленина, 29, Ефремов, Россия",
+        "boundedBy": [
+          [
+            38.113415,
+            53.143534
+          ],
+          [
+            38.121626,
+            53.14847
+          ]
+        ],
+        "CompanyMetaData": {
+          "id": "1113603458",
+          "name": "Красивая Меча",
+          "address": "Тульская область, Ефремов, улица Ленина, 29",
+          "url": "http://ezskservice.ru/",
+          "Phones": [
+            {
+              "type": "phone",
+              "formatted": "+7 (953) 193-37-82"
+            },
+            {
+              "type": "phone",
+              "formatted": "+7 (48741) 6-06-45"
+            }
+          ],
+          "Categories": [
+            {
+              "class": "hotels",
+              "name": "Гостиница"
+            }
+          ],
+          "Hours": {
+            "text": "ежедневно, круглосуточно",
+            "Availabilities": [
+              {
+                "TwentyFourHours": true,
+                "Everyday": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.096473,
+          53.146731
+        ]
+      },
+      "properties": {
+        "name": "Счастье",
+        "description": "Тульское ш., 4, Ефремов, Россия",
+        "boundedBy": [
+          [
+            38.092368,
+            53.144263
+          ],
+          [
+            38.100579,
+            53.1492
+          ]
+        ],
+        "CompanyMetaData": {
+          "id": "28090402354",
+          "name": "Счастье",
+          "address": "Тульская область, Ефремов, Тульское шоссе, 4",
+          "Phones": [
+            {
+              "type": "phone",
+              "formatted": "+7 (950) 914-19-99"
+            }
+          ],
+          "Categories": [
+            {
+              "class": "hotels",
+              "name": "Гостиница"
+            }
+          ],
+          "Hours": {
+            "text": "ежедневно, круглосуточно",
+            "Availabilities": [
+              {
+                "TwentyFourHours": true,
+                "Everyday": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.070562,
+          53.150083
+        ]
+      },
+      "properties": {
+        "name": "Фамп",
+        "description": "Тульское ш., 133В, Ефремов, Россия",
+        "boundedBy": [
+          [
+            38.066461,
+            53.147617
+          ],
+          [
+            38.074671,
+            53.152553
+          ]
+        ],
+        "CompanyMetaData": {
+          "id": "1258725611",
+          "name": "Фамп",
+          "address": "Тульская область, Ефремов, Тульское шоссе, 133В",
+          "Phones": [
+            {
+              "type": "phone",
+              "formatted": "+7 (953) 181-89-15"
+            }
+          ],
+          "Categories": [
+            {
+              "class": "hotels",
+              "name": "Гостиница"
+            }
+          ],
+          "Hours": {
+            "text": "ежедневно, круглосуточно",
+            "Availabilities": [
+              {
+                "TwentyFourHours": true,
+                "Everyday": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.033834,
+          53.155119
+        ]
+      },
+      "properties": {
+        "name": "Robinzon",
+        "description": "Большая ул., 2, д. Ясеновая, Россия",
+        "boundedBy": [
+          [
+            38.029791,
+            53.152656
+          ],
+          [
+            38.038002,
+            53.157591
+          ]
+        ],
+        "CompanyMetaData": {
+          "id": "147915605355",
+          "name": "Robinzon",
+          "address": "Тульская область, муниципальное образование Ефремов, деревня Ясеновая, Большая улица, 2",
+          "Phones": [
+            {
+              "type": "phone",
+              "formatted": "+7 (910) 556-55-60"
+            }
+          ],
+          "Categories": [
+            {
+              "class": "hotels",
+              "name": "Гостиница"
+            }
+          ],
+          "Hours": {
+            "text": "ежедневно, круглосуточно",
+            "Availabilities": [
+              {
+                "TwentyFourHours": true,
+                "Everyday": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.201751,
+          53.044434
+        ]
+      },
+      "properties": {
+        "name": "Привет",
+        "description": "Тульская область, муниципальное образование Ефремов, деревня Платоновка",
+        "boundedBy": [
+          [
+            38.189898,
+            53.039866
+          ],
+          [
+            38.202986,
+            53.048999
+          ]
+        ],
+        "CompanyMetaData": {
+          "id": "108828283535",
+          "name": "Привет",
+          "address": "Тульская область, муниципальное образование Ефремов, деревня Платоновка",
+          "Phones": [
+            {
+              "type": "phone",
+              "formatted": "+7 (903) 038-65-32"
+            }
+          ],
+          "Categories": [
+            {
+              "class": "hotels",
+              "name": "Гостиница"
+            },
+            {
+              "class": "cafe",
+              "name": "Кафе"
+            }
+          ],
+          "Hours": {
+            "text": "ежедневно, круглосуточно",
+            "Availabilities": [
+              {
+                "TwentyFourHours": true,
+                "Everyday": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.117359,
+          53.148265
+        ]
+      },
+      "properties": {
+        "name": "Гест 4",
+        "description": "ул. Лермонтова, 46, Ефремов, Россия",
+        "boundedBy": [
+          [
+            38.113254,
+            53.145797
+          ],
+          [
+            38.121464,
+            53.150733
+          ]
+        ],
+        "CompanyMetaData": {
+          "id": "235655190228",
+          "name": "Гест 4",
+          "address": "Тульская область, Ефремов, улица Лермонтова, 46",
+          "Phones": [
+            {
+              "type": "phone",
+              "formatted": "+7 (953) 973-10-03"
+            }
+          ],
+          "Categories": [
+            {
+              "class": "hotels",
+              "name": "Гостиница"
+            }
+          ],
+          "Hours": {
+            "text": "ежедневно, круглосуточно",
+            "Availabilities": [
+              {
+                "TwentyFourHours": true,
+                "Everyday": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.086528,
+          53.149361
+        ]
+      },
+      "properties": {
+        "name": "Ефремов",
+        "description": "ул. Мира, 2А, Ефремов, Россия",
+        "boundedBy": [
+          [
+            38.082549,
+            53.146872
+          ],
+          [
+            38.09076,
+            53.151808
+          ]
+        ],
+        "CompanyMetaData": {
+          "id": "1030687432",
+          "name": "Ефремов",
+          "address": "Тульская область, Ефремов, улица Мира, 2А",
+          "Phones": [
+            {
+              "type": "phone",
+              "formatted": "+7 (48741) 5-04-68"
+            },
+            {
+              "type": "phone",
+              "formatted": "+7 (953) 427-76-46"
+            },
+            {
+              "type": "phone",
+              "formatted": "+7 (905) 110-44-66"
+            }
+          ],
+          "Categories": [
+            {
+              "class": "hotels",
+              "name": "Гостиница"
+            }
+          ],
+          "Hours": {
+            "text": "ежедневно, круглосуточно",
+            "Availabilities": [
+              {
+                "TwentyFourHours": true,
+                "Everyday": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.113841,
+          53.146136
+        ]
+      },
+      "properties": {
+        "name": "Валентина",
+        "description": "ул. Свердлова, 55, Ефремов, Россия",
+        "boundedBy": [
+          [
+            38.10984,
+            53.143626
+          ],
+          [
+            38.118051,
+            53.148562
+          ]
+        ],
+        "CompanyMetaData": {
+          "id": "1259931688",
+          "name": "Валентина",
+          "address": "Тульская область, Ефремов, улица Свердлова, 55",
+          "Phones": [
+            {
+              "type": "phone",
+              "formatted": "+7 (48741) 6-51-53"
+            },
+            {
+              "type": "phone",
+              "formatted": "+7 (903) 038-52-90"
+            },
+            {
+              "type": "phone",
+              "formatted": "+7 (905) 110-03-04"
+            }
+          ],
+          "Categories": [
+            {
+              "class": "hotels",
+              "name": "Гостиница"
+            }
+          ],
+          "Hours": {
+            "text": "ежедневно, круглосуточно",
+            "Availabilities": [
+              {
+                "TwentyFourHours": true,
+                "Everyday": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.201856,
+          53.044392
+        ]
+      },
+      "properties": {
+        "name": "Привет",
+        "description": "Тульская область, муниципальное образование Ефремов, деревня Платоновка",
+        "boundedBy": [
+          [
+            38.189898,
+            53.039866
+          ],
+          [
+            38.202986,
+            53.048999
+          ]
+        ],
+        "CompanyMetaData": {
+          "id": "157605657556",
+          "name": "Привет",
+          "address": "Тульская область, муниципальное образование Ефремов, деревня Платоновка",
+          "Categories": [
+            {
+              "class": "hotels",
+              "name": "Гостиница"
+            }
+          ],
+          "Hours": {
+            "text": "ежедневно, круглосуточно",
+            "Availabilities": [
+              {
+                "TwentyFourHours": true,
+                "Everyday": true
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
