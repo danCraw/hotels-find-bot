@@ -103,7 +103,11 @@ async def send_travel_time(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         travel_time = time_from_text_to_seconds(message.text)
         if travel_time == 0:
-            await bot.send_message(message.from_user.id, 'Пожалуйста, введите данные в верном формате')
+            await bot.send_message(message.from_user.id, 'Пожалуйста, введите данные в верном формате. Возможно, '
+                                                         'Вы пытаетесь отправить боту свою геолокацию, '
+                                                         'используя устройство, с которого это сделать нельзя, '
+                                                         'например компьютер или ноутбук. В таком случае введите '
+                                                         'город отправления самостоятельно')
             return
         else:
             data['travel_time'] = travel_time
@@ -118,7 +122,7 @@ async def send_travel_time(message: types.Message, state: FSMContext):
             md.text(f"Ваш маршрут из: {data['point']['city']}"),
             md.text(f"в: {data['destination_city']['city']}"),
             md.text(f"протяженностью: {full_length} км,"),
-            md.text(f"занимает {time_duration[0][1]} ч. {time_duration[1][1]} мин."),
+            md.text(f"занимает {time_duration[0]} ч. {time_duration[1]} мин."),
             sep='\n'
         ))
         sleep(3)

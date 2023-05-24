@@ -5,6 +5,7 @@ __pycache__/
 *$py.class
 
 config
+calculations/path_data
 
 # C extensions
 *.so
