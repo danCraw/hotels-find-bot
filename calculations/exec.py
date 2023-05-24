@@ -23,7 +23,7 @@ def yandex_city_geocoding(city: str) -> dict:
     response = requests.request("GET", city_geocode_url, headers=headers, data=payload)
     with open('./calculations/path_data/city_geocoding.json', 'w') as outfile:
         outfile.write(response.text)
-    # with open('./calculations/path_data/openrouteserviceCity.json') as json_file:
+    # with open('./calculations/path_data/city_geocoding.json') as json_file:
     #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
     coords = str(all_data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos']).split()
@@ -65,7 +65,7 @@ def build_route(lat_from, lon_from, lat_to, lon_to):
     response = requests.request("GET", path_url, headers=headers, data=payload)
     with open('./calculations/path_data/route.json', 'w') as outfile:
         outfile.write(response.text)
-    # with open('./calculations/path_data/testVRN_SOCHI.json') as json_file:
+    # with open('./calculations/path_data/route.json') as json_file:
     #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
     features = all_data['features']
@@ -89,13 +89,6 @@ def find_coordinates_by_time(time: int,
     path_coords = route_data['coordinates']
     coordinates = dict({'lat': None, 'lon': None})
     for step in path_steps:
-        # if cur_time < time:
-        #     cur_time += step['duration']
-        # elif cur_time > time:
-        #     if cur_time - time < 300:
-        #         lon, lat = path_coords[step['way_points'][0]]
-        #         coordinates.append({'lat':lat, 'lon': lon})
-        #         break
         if time > cur_time:
             dif = time - cur_time
             if dif < 300:
@@ -123,7 +116,7 @@ def find_hotel_by_coordinates(point: dict):
     response = requests.request("GET", url, headers=headers, data=payload)
     with open('./calculations/path_data/hotels.json', 'w') as outfile:
         outfile.write(response.text)
-    # with open('./calculations/path_data/testVRN_SOCHI_HOTELS.json') as json_file:
+    # with open('./calculations/path_data/hotels.json') as json_file:
     #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
     # print(all_data)
