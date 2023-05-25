@@ -92,15 +92,17 @@ async def send_path_data(message: types.Message, state: FSMContext):
 
         data['path_data'] = build_route(data['point']['lat'], data['point']['lon'], city['destination_city']['lat'],
                                         city['destination_city']['lon'])
-        time_duration = time.strftime("%H:%M", time.gmtime(data['path_data']['duration']))
-        time_duration = time_duration.split(':')
+        # time_duration = time.strftime("%H:%M", time.gmtime(data['path_data']['duration']))
+        # time_duration = time_duration.split(':')
+        time_h_duration = data['path_data']['duration'] // 3600
+        time_m_duration = int((data['path_data']['duration'] / 3600 - time_h_duration) * 60)
         full_length = round(data['path_data']['length'] / 1000, 3)
     await FSMClient.next()
     await bot.send_message(message.from_user.id, md.text(
         md.text(f"Ваш маршрут из: {data['point']['city']}"),
         md.text(f"в: {city['destination_city']['city']}"),
         md.text(f"протяженностью: {full_length} км,"),
-        md.text(f"занимает {time_duration[0]} ч. {time_duration[1]} мин."),
+        md.text(f"занимает {time_h_duration} ч. {time_m_duration} мин."),
         sep='\n'
     ))
     await message.reply('Далее введите время (в часах или минутах), через которое хотите остановиться в '
