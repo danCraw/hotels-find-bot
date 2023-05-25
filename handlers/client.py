@@ -13,6 +13,7 @@ from calculations import *
 from time import sleep
 
 
+''' START '''
 @dp.message_handler(commands=['start', 'help'])
 async def start_command(message: types.Message):
     await bot.send_message(message.from_user.id,
@@ -27,8 +28,13 @@ async def start_command(message: types.Message):
 
 @dp.message_handler(commands=['info'])
 async def get_info(message: types.Message):
-    await bot.send_message(message.from_user.id, "some info")
-
+    await bot.send_message(message.from_user.id, md.text(
+        md.text("Всё, что Вам нужно указать, чтобы я нашел лучшие  отели для Вас:"),
+        md.text("* ввести город отправления или указать свою локацию (доступно с мобильного устройства)"),
+        md.text("* далее необходимо ввести город назначения"),
+        md.text("* и затем ввести время, через которое хотите остановиться в отеле"),
+        sep='\n',
+    ))
 
 '''USER LOCATION'''
 
