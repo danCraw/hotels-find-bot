@@ -105,10 +105,11 @@ async def send_path_data(message: types.Message, state: FSMContext):
         full_length = round(data['path_data']['length'] / 1000, 3)
     await FSMClient.next()
     await bot.send_message(message.from_user.id, md.text(
-        md.text(f"Ваш маршрут из: {data['point']['city']}"),
+        md.text(f"Ваш маршрут:"),
+        md.text(f"из: {data['point']['city']}"),
         md.text(f"в: {city['destination_city']['city']}"),
         md.text(f"протяженностью: {full_length} км,"),
-        md.text(f"занимает {time_h_duration} ч. {time_m_duration} мин."),
+        md.text(f"занимает: {time_h_duration} ч. {time_m_duration} мин."),
         sep='\n'
     ))
     await message.reply('Далее введите время (в часах или минутах), через которое хотите остановиться в '
