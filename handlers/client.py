@@ -44,27 +44,28 @@ class FSMClient(StatesGroup):
     path_data = State()
     travel_time = State()
 
-@dp.message_handler(commands=['go'], state=None)
+
+@dp.message_handler(regexp='Начать', state=None)
 async def user_loc(message: types.Message):
     await FSMClient.point.set()
-    b_location = KeyboardButton('/locate', request_location=True)
-    b_cancel = KeyboardButton('/cancel')
+    b_location = KeyboardButton('Локация', request_location=True)
+    b_cancel = KeyboardButton('Отмена')
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(b_location, b_cancel)
 
     await message.answer('Пожалуйста, введите город отправления '
-                         'или поделитесь своей геопозицией, нажав на кнопку  "locate". '
-                         'Чтобы выйти, нажмите или введите"cancel" ', reply_markup=markup)
+                         'или поделитесь своей геопозицией, нажав на кнопку  "Локация". '
+                         'Чтобы выйти, нажмите или нажмите "Отмена" ', reply_markup=markup)
 
 
-@dp.message_handler(state='*', commands='cancel')
-@dp.message_handler(Text(equals='cancel', ignore_case=True), state='*')
+@dp.message_handler(state='*', commands='Отмена')
+@dp.message_handler(Text(equals='Отмена', ignore_case=True), state='*')
 async def cansel_handler(message: types.Message, state: FSMContext):
     cur_state = await state.get_state()
     if cur_state is None:
         return
     await state.finish()
-    await message.reply('cancel')
+    await message.reply('Отмена')
 
 
 @dp.message_handler(state=FSMClient.point)
@@ -81,12 +82,10 @@ async def user_location(message: types.Message, state: FSMContext):
     lat = message.location.latitude
     lon = message.location.longitude
     city = yandex_reverse_geocoding(lon=lon, lat=lat)
-    # coordinates = f"latitude:{lat}\nlongitude:{lon}"
     async with state.proxy() as data:
         data['point'] = {'city': city, 'lat': lat, 'lon': lon}
     await FSMClient.next()
     await message.answer('Введите город, в который Вы едете')
-    # await bot.send_message(message.from_user.id, coordinates)
 
 
 @dp.message_handler(state=FSMClient.path_data)
@@ -98,14 +97,12 @@ async def send_path_data(message: types.Message, state: FSMContext):
 
         data['path_data'] = build_route(data['point']['lat'], data['point']['lon'], city['destination_city']['lat'],
                                         city['destination_city']['lon'])
-        # time_duration = time.strftime("%H:%M", time.gmtime(data['path_data']['duration']))
-        # time_duration = time_duration.split(':')
         time_h_duration = data['path_data']['duration'] // 3600
         time_m_duration = int((data['path_data']['duration'] / 3600 - time_h_duration) * 60)
         full_length = round(data['path_data']['length'] / 1000, 3)
     await FSMClient.next()
     await bot.send_message(message.from_user.id, md.text(
-        md.text(f"Ваш маршрут:"),
+        md.text("Ваш маршрут:"),
         md.text(f"из: {data['point']['city']}"),
         md.text(f"в: {city['destination_city']['city']}"),
         md.text(f"протяженностью: {full_length} км,"),
@@ -129,7 +126,6 @@ async def send_travel_time(message: types.Message, state: FSMContext):
                                                          'город отправления самостоятельно')
             return
         point = find_coordinates_by_time(data['travel_time'], data['path_data'])
-        # sleep(3)
         hotels = find_hotel_by_coordinates(point)
         await bot.send_message(message.from_user.id, "Гостиницы, которые я нашел", reply_markup=kb_client)
         for hotel in hotels:
@@ -149,7 +145,6 @@ async def send_travel_time(message: types.Message, state: FSMContext):
 
 
 def client_handler_register(dp: Dispatcher):
-    pass
-    # dp.register_message_handler(start_command, commands=['start', 'help'])
-    # dp.register_message_handler(get_info, commands=['info'])
-    # dp.register_message_handler(user_location, content_types=['location'])
+    dp.register_message_handler(start_command, commands=['start', 'help'])
+    dp.register_message_handler(get_info, commands=['info'])
+    dp.register_message_handler(user_location, content_types=['location'])

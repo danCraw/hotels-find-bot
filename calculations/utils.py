@@ -1,6 +1,7 @@
 import requests
 import json
-from config import YANDEX_API, OPEN_ROUTE_SERVICE_API_KEY, YANDEX_SEARCH_API_KEY
+from config import YANDEX_API, OPEN_ROUTE_SERVICE_API_KEY, YANDEX_SEARCH_ORGANIZATION_API
+from models.point import Point
 
 payload = {}
 headers = {}
@@ -19,25 +20,23 @@ headers = {}
 #     return coordinates
 
 def yandex_city_geocoding(city: str) -> dict:
-    city_geocode_url = f'https://geocode-maps.yandex.ru/1.x/?apikey={YANDEX_API}&geocode={city}&format=json'
-    response = requests.request("GET", city_geocode_url, headers=headers, data=payload)
+    CITY_GEOCODE_URL = f'https://geocode-maps.yandex.ru/1.x/?apikey={YANDEX_API}&geocode={city}&format=json'
+    response = requests.request("GET", CITY_GEOCODE_URL, headers=headers, data=payload)
     with open('./calculations/path_data/city_geocoding.json', 'w') as outfile:
         outfile.write(response.text)
-    # with open('./calculations/path_data/city_geocoding.json') as json_file:
-    #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
     coords = str(all_data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos']).split()
-    coordinates = {'lat': coords[1], 'lon': coords[0]}  # в openrouteservice сначала lon, затем lat
+    lon, lat = coords
+    coordinates = {'lat': lat, 'lon': lon}  # в openrouteservice сначала lon, затем lat
     return coordinates
 
 
 def yandex_reverse_geocoding(lon: float, lat: float):
-    reverse_geocode_url = f'https://geocode-maps.yandex.ru/1.x/?apikey={YANDEX_API}&geocode={lon},{lat}&format=json'
-    response = requests.request("GET", reverse_geocode_url, headers=headers, data=payload)
+    REVERSE_GEOCODE_URL = f'https://geocode-maps.yandex.ru/1.x/?apikey={YANDEX_API}&geocode={lon},{lat}&format=json'
+    response = requests.request("GET", REVERSE_GEOCODE_URL, headers=headers, data=payload)
+    print(response)
     with open('./calculations/path_data/reverse_geocoding.json', 'w') as outfile:
         outfile.write(response.text)
-    # with open('./calculations/path_data/reverse_geocoding.json') as json_file:
-    #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
     text = str(all_data['response']['GeoObjectCollection']['featureMember'][0]
                  ['GeoObject']['metaDataProperty']['GeocoderMetaData']['text'])
@@ -65,8 +64,6 @@ def build_route(lat_from, lon_from, lat_to, lon_to):
     response = requests.request("GET", path_url, headers=headers, data=payload)
     with open('./calculations/path_data/route.json', 'w') as outfile:
         outfile.write(response.text)
-    # with open('./calculations/path_data/route.json') as json_file:
-    #     all_data = json.load(json_file)
     all_data = json.loads(response.text)
     features = all_data['features']
     segments = features[0]['properties']['segments']
@@ -82,8 +79,7 @@ def build_route(lat_from, lon_from, lat_to, lon_to):
     return route_data
 
 
-def find_coordinates_by_time(time: int,
-                             route_data) -> []:  # возвращает координаты, где примерно будет пользователь через время time
+def find_coordinates_by_time(time: int, route_data) -> []:  # возвращает координаты, где примерно будет пользователь через время time
     cur_time = 0
     path_steps = route_data['steps']
     path_coords = route_data['coordinates']
@@ -101,7 +97,7 @@ def find_coordinates_by_time(time: int,
                 difference_time = time - cur_time  # 1500
                 part_in_the_list_of_coords = difference_time / step_duration  # от 0 до 1
                 lon, lat = path_coords[step['way_points'][int(len(step['way_points']) * part_in_the_list_of_coords)]]
-                coordinates = dict({'lat': lat, 'lon': lon})
+                coordinates = Point(lat=lat, lon=lon)
                 print('two')
                 break
             cur_time += step['duration']
@@ -110,16 +106,14 @@ def find_coordinates_by_time(time: int,
     return coordinates
 
 
-def find_hotel_by_coordinates(point: dict):
-    lat, lon = point['lat'], point['lon']
-    url = f'https://search-maps.yandex.ru/v1/?text=hotel&ll={lon},{lat}&lang=ru_RU&apikey={YANDEX_SEARCH_API_KEY}'
+def find_hotel_by_coordinates(point: Point):
+    url = f'https://search-maps.yandex.ru/v1/?text=hotel&ll={point.lon},{point.lat}&lang=ru_RU&apikey={YANDEX_SEARCH_ORGANIZATION_API}'
     response = requests.request("GET", url, headers=headers, data=payload)
     with open('./calculations/path_data/hotels.json', 'w') as outfile:
         outfile.write(response.text)
-    # with open('./calculations/path_data/hotels.json') as json_file:
-    #     all_data = json.load(json_file)
+    print(response)
     all_data = json.loads(response.text)
-    # print(all_data)
+    print(all_data)
     hotels_data = all_data['features']
     hotels = []
     for h in hotels_data:

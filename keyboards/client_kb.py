@@ -1,7 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 
 b_info = KeyboardButton('/info')
-b_start_path_script = KeyboardButton('/go')
+b_start_path_script = KeyboardButton('Начать')
 # b_location = KeyboardButton('/locate', request_location=True)
 
 b_phone = KeyboardButton('Phone', request_contact=True)
