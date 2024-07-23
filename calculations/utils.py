@@ -1,10 +1,10 @@
 import requests
 import json
-from config import YANDEX_API, OPEN_ROUTE_SERVICE_API_KEY, YANDEX_SEARCH_ORGANIZATION_API
+from config import YANDEX_GEOCODE_API_KEY, OPEN_ROUTE_SERVICE_API_KEY, YANDEX_SEARCH_ORGANIZATION_API, \
+    YANDEX_SEARCH_ORGANIZATION_URL, OPEN_ROUTE_SERVICE_API_URL, YANDEX_GEOCODE_API_URL
+from models.hotel import Hotel
 from models.point import Point
-
-payload = {}
-headers = {}
+from models.step import Step
 
 
 # def openrouteservice_city_geocoding(city: str) -> dict:
@@ -19,28 +19,54 @@ headers = {}
 #     coordinates = {'lat': coords[1], 'lon': coords[0]}  # в openrouteservice сначала lon, затем lat
 #     return coordinates
 
-def yandex_city_geocoding(city: str) -> dict:
-    CITY_GEOCODE_URL = f'https://geocode-maps.yandex.ru/1.x/?apikey={YANDEX_API}&geocode={city}&format=json'
-    response = requests.request("GET", CITY_GEOCODE_URL, headers=headers, data=payload)
-    with open('./calculations/path_data/city_geocoding.json', 'w') as outfile:
+
+def yandex_city_geocoding(city: str) -> Point:
+    """Get the coordinates of the city using yandex geocoding API"""
+
+    url = YANDEX_GEOCODE_API_URL
+
+    params = {
+        'apikey': YANDEX_GEOCODE_API_KEY,
+        'geocode': city,
+        'format': 'json'
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"HTTP request failed: {e}")
+
+    city_geocoding_path = './calculations/path_data/city_geocoding.json'
+    with open(city_geocoding_path, 'w') as outfile:
         outfile.write(response.text)
-    all_data = json.loads(response.text)
-    coords = str(all_data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos']).split()
-    lon, lat = coords
-    coordinates = {'lat': lat, 'lon': lon}  # в openrouteservice сначала lon, затем lat
-    return coordinates
+
+    try:
+        all_data = response.json()
+    except json.JSONDecodeError as e:
+        raise Exception(f"Failed to decode JSON response: {e}")
+
+    try:
+        coords = all_data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos'].split()
+        lon, lat = coords
+    except (KeyError, IndexError) as e:
+        raise Exception(f"Failed to extract coordinates from JSON response: {e}")
+
+    point = Point(lat=lat, lon=lon)
+    return point
 
 
 def yandex_reverse_geocoding(lon: float, lat: float):
-    REVERSE_GEOCODE_URL = f'https://geocode-maps.yandex.ru/1.x/?apikey={YANDEX_API}&geocode={lon},{lat}&format=json'
-    response = requests.request("GET", REVERSE_GEOCODE_URL, headers=headers, data=payload)
-    print(response)
+    REVERSE_GEOCODE_URL = f'https://geocode-maps.yandex.ru/1.x/?apikey={YANDEX_GEOCODE_API_KEY}&geocode={lon},{lat}&format=json'
+    response = requests.request("GET", REVERSE_GEOCODE_URL)
+    
     with open('./calculations/path_data/reverse_geocoding.json', 'w') as outfile:
         outfile.write(response.text)
     all_data = json.loads(response.text)
     text = str(all_data['response']['GeoObjectCollection']['featureMember'][0]
                  ['GeoObject']['metaDataProperty']['GeocoderMetaData']['text'])
     return text
+
 
 def time_from_text_to_seconds(time: str):
     words = time.split()
@@ -60,80 +86,115 @@ def time_from_text_to_seconds(time: str):
 
 
 def build_route(lat_from, lon_from, lat_to, lon_to):
-    path_url = f'https://api.openrouteservice.org/v2/directions/driving-car?api_key={OPEN_ROUTE_SERVICE_API_KEY}&start={lon_from},{lat_from}&end={lon_to},{lat_to}'
-    response = requests.request("GET", path_url, headers=headers, data=payload)
-    with open('./calculations/path_data/route.json', 'w') as outfile:
+    """Get the route between two points using openrouteservice API"""
+
+    api_url = OPEN_ROUTE_SERVICE_API_URL
+    params = {
+        'api_key': OPEN_ROUTE_SERVICE_API_KEY,
+        'start': f'{lon_from},{lat_from}',
+        'end': f'{lon_to},{lat_to}'
+    }
+
+    try:
+        response = requests.get(api_url, params=params)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"HTTP request failed: {e}")
+
+    route_data_path = './calculations/path_data/route.json'
+    with open(route_data_path, 'w') as outfile:
         outfile.write(response.text)
-    all_data = json.loads(response.text)
-    features = all_data['features']
-    segments = features[0]['properties']['segments']
-    coordinates = features[0]['geometry']['coordinates']
-    # print(len(coordinates))
-    total_route_length = segments[0]['distance']  # meters
-    total_route_duration = segments[0]['duration']  # seconds
-    steps = segments[0]['steps']
-    # print(len(steps))
-    # print(type(steps))
-    route_data = {'length': total_route_length, 'duration': total_route_duration, 'steps': steps,
-                  'coordinates': coordinates}
+
+    try:
+        all_data = response.json()
+    except json.JSONDecodeError as e:
+        raise Exception(f"Failed to decode JSON response: {e}")
+
+    features = all_data.get('features', [])
+    if not features:
+        raise Exception("No features found in the response")
+
+    segments = features[0].get('properties', {}).get('segments', [])
+    if not segments:
+        raise Exception("No segments found in the response")
+
+    coordinates = features[0].get('geometry', {}).get('coordinates', [])
+    length = segments[0].get('distance', 0)  # meters
+    duration = segments[0].get('duration', 0)  # seconds
+    steps = segments[0].get('steps', [])
+
+    route_data = {
+        'coordinates': coordinates,
+        'length': length,
+        'duration': duration,
+        'steps': steps
+    }
     return route_data
 
 
-def find_coordinates_by_time(time: int, route_data) -> []:  # возвращает координаты, где примерно будет пользователь через время time
+def find_coordinates_by_time(time: int, route_data: dict) -> Point:
+    """Find the coordinates of the point on the route by time"""
+
     cur_time = 0
-    path_steps = route_data['steps']
+    path_steps: list[Step] = route_data['steps']
     path_coords = route_data['coordinates']
-    coordinates = dict({'lat': None, 'lon': None})
+
     for step in path_steps:
-        if time > cur_time:
-            dif = time - cur_time
-            if dif < 300:
-                lon, lat = path_coords[step['way_points'][-1]]
-                coordinates = dict({'lat': lat, 'lon': lon})
-                print('one')
-                break
-            elif step['duration'] > time - cur_time:
-                step_duration = step['duration']  # 2400
-                difference_time = time - cur_time  # 1500
-                part_in_the_list_of_coords = difference_time / step_duration  # от 0 до 1
-                lon, lat = path_coords[step['way_points'][int(len(step['way_points']) * part_in_the_list_of_coords)]]
-                coordinates = Point(lat=lat, lon=lon)
-                print('two')
-                break
-            cur_time += step['duration']
-    print(f'time: {time}, cur_time: {cur_time}')
-    print(f'coord: {coordinates}')
-    return coordinates
+        if time <= cur_time + step.duration:
+            if time == cur_time:
+                lon, lat = path_coords[step.way_points[0]]
+            else:
+                part_in_the_list_of_coords = (time - cur_time) / step.duration
+                index = int(len(step.way_points) * part_in_the_list_of_coords)
+                lon, lat = path_coords[step.way_points[index]]
+            return Point(lat=lat, lon=lon)
+        cur_time += step.duration
+
+    # If time exceeds the total duration, return the last coordinate
+    lon, lat = path_coords[-1]
+    point = Point(lat=lat, lon=lon)
+    return point
 
 
-def find_hotel_by_coordinates(point: Point):
-    url = f'https://search-maps.yandex.ru/v1/?text=hotel&ll={point.lon},{point.lat}&lang=ru_RU&apikey={YANDEX_SEARCH_ORGANIZATION_API}'
-    response = requests.request("GET", url, headers=headers, data=payload)
-    with open('./calculations/path_data/hotels.json', 'w') as outfile:
+def find_hotel_by_coordinates(point: Point) -> list[Hotel]:
+    """Find hotels by coordinates using yandex search organization API"""
+
+    url = YANDEX_SEARCH_ORGANIZATION_URL
+
+    params = {
+        'll': f'{point.lon},{point.lat}',
+        'lang': 'ru_RU',
+        'apikey': YANDEX_SEARCH_ORGANIZATION_API
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"HTTP request failed: {e}")
+
+    hotels_data_path = './calculations/path_data/hotels.json'
+    with open(hotels_data_path, 'w') as outfile:
         outfile.write(response.text)
-    print(response)
-    all_data = json.loads(response.text)
-    print(all_data)
-    hotels_data = all_data['features']
-    hotels = []
+
+    try:
+        all_data = response.json()
+    except json.JSONDecodeError as e:
+        raise Exception(f"Failed to decode JSON response: {e}")
+
+    hotels_data = all_data.get('features', [])
+    hotels: list[Hotel] = []
+
     for h in hotels_data:
-        hotel = dict()
-        hotel_data = h['properties']['CompanyMetaData']
-        hotel_name = hotel_data['name']
-        hotel['name'] = hotel_name
-        hotel_address = hotel_data['address']
-        hotel['address'] = hotel_address
-        if 'url' in hotel_data:
-            hotel_url = hotel_data['url']
-            hotel['url'] = hotel_url
-        hotel_phones = []
-        if 'Phones' in hotel_data:
-            for phone in hotel_data['Phones']:
-                number = phone['formatted']
-                hotel_phones.append(number)
-            hotel['phones'] = hotel_phones
-        if 'Hours' in hotel_data:
-            hotel_hours = hotel_data['Hours']['text']
-            hotel['hours'] = hotel_hours
-        hotels.append(hotel)
+        hotel_data = h.get('properties', {}).get('CompanyMetaData', {})
+        hotel_model = Hotel(
+            name=hotel_data.get('name'),
+            address=hotel_data.get('address'),
+            url=hotel_data.get('url'),
+            phones=[phone.get('formatted') for phone in hotel_data.get('Phones', [])],
+            hours=hotel_data.get('Hours', {}).get('text'),
+        )
+
+        hotels.append(hotel_model)
+
     return hotels
