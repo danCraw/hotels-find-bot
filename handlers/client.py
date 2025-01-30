@@ -127,8 +127,17 @@ async def send_path_data(message: types.Message, state: FSMContext):
             md.text(f"занимает: {time_h_duration} ч. {time_m_duration} мин."),
             sep='\n'
         ))
-        await message.reply('Далее введите время (в часах или минутах), через которое хотите остановиться в '
-                            'отеле. Например: "3 часа" или "56 минут" или "5 часов 42 минуты".')
+        await message.answer(
+            "Введите количество взрослых:"
+        )
+        await Filters.waiting_for_adults.set()
+
+
+class Filters(StatesGroup):
+    waiting_for_adults = State()
+    waiting_for_children = State()
+    waiting_for_children_age = State()
+    waiting_for_pets = State()
 
 
 @dp.message_handler(state=FSMClient.travel_time)
@@ -143,8 +152,20 @@ async def send_travel_time(message: types.Message, state: FSMContext):
                                                          'город отправления самостоятельно')
             return
 
+
+
         point = find_coordinates_by_time(travel_time, data['path_data'])
-        hotels: list[Hotel] = find_hotel_by_coordinates(point)
+        hotels: list[Hotel] = find_hotels_by_coordinates(point)
+        await FSMClient.next()
+        adults = data.get('adults')
+        children = data.get('children')
+
+        founded_rooms = []
+        ostrovok_hotels = get_ostrovok_hotels(hotels)
+        for hotel in ostrovok_hotels:
+            hotels_rooms: list[Hotel] = await find_rooms_by_params(hotel["name"], adults, children)
+            founded_rooms.append(hotels_rooms)
+
         await bot.send_message(message.from_user.id, "Гостиницы, которые я нашел", reply_markup=kb_client)
 
         for hotel in hotels:
@@ -162,7 +183,43 @@ async def send_travel_time(message: types.Message, state: FSMContext):
             ))
             sleep(0.5)
 
-    await state.finish()
+
+
+
+@dp.message_handler(state=Filters.waiting_for_adults)
+async def process_adults_input(message: types.Message, state: FSMContext):
+    await state.update_data(adults=int(message.text))
+    await message.answer("Введите количество детей:")
+    await Filters.waiting_for_children.set()
+
+
+@dp.message_handler(state=Filters.waiting_for_children)
+async def process_children_input(message: types.Message, state: FSMContext):
+    await state.update_data(children=int(message.text))
+    user_data = await state.get_data()
+    children_count = user_data.get('children')
+
+    if children_count:
+        await message.answer(f"Введите возраст для каждого из {children_count} детей через запятую (например, 5, 8):")
+        await Filters.waiting_for_children_age.set()
+    else:
+        await got_to_count_travel_time(message)
+
+
+@dp.message_handler(state=Filters.waiting_for_children_age)
+async def process_children_age_input(message: types.Message, state: FSMContext):
+    ages = message.text.split(',')
+    ages = [age.strip() for age in ages]
+
+    await state.update_data(children_age=ages)
+    await message.answer("У вас есть питомцы? (да/нет)")
+    await got_to_count_travel_time(message)
+
+
+async def got_to_count_travel_time(message: types.Message):
+    await message.answer('Далее введите время (в часах или минутах), через которое хотите остановиться в '
+                         'отеле. Например: "3 часа" или "56 минут" или "5 часов 42 минуты".')
+    await FSMClient.travel_time.set()
 
 
 def client_handler_register(dp: Dispatcher):

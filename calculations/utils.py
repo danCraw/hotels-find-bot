@@ -140,15 +140,16 @@ def find_coordinates_by_time(time: int, route_data: dict) -> Point:
     path_coords = route_data['coordinates']
 
     for step in path_steps:
-        if time <= cur_time + step.duration:
+        step_ = Step(**step)
+        if time <= cur_time + step_.duration:
             if time == cur_time:
-                lon, lat = path_coords[step.way_points[0]]
+                lon, lat = path_coords[step_.way_points[0]]
             else:
-                part_in_the_list_of_coords = (time - cur_time) / step.duration
-                index = int(len(step.way_points) * part_in_the_list_of_coords)
-                lon, lat = path_coords[step.way_points[index]]
+                part_in_the_list_of_coords = (time - cur_time) / step_.duration
+                index = int(len(step_.way_points) * part_in_the_list_of_coords)
+                lon, lat = path_coords[step_.way_points[index]]
             return Point(lat=lat, lon=lon)
-        cur_time += step.duration
+        cur_time += step_.duration
 
     # If time exceeds the total duration, return the last coordinate
     lon, lat = path_coords[-1]
@@ -198,3 +199,36 @@ def find_hotel_by_coordinates(point: Point) -> list[Hotel]:
         hotels.append(hotel_model)
 
     return hotels
+
+def get_ostrovok_hotels(hotels: list[Hotel]) -> list[dict]:
+    url = "https://ostrovok.ru/api/site/multicomplete.json"
+
+    ostrovok_hotels = []
+
+    for hotel in hotels:
+        params = {
+            "query": hotel.name,
+            "locale": "ru"
+        }
+
+        response = requests.get(url, params=params)
+        ostrovok_hotel = response.json()['hotels'][0]
+        ostrovok_hotels.append(ostrovok_hotel)
+
+    return ostrovok_hotels
+
+async def find_rooms_by_params(hotel_name: str, adults: int, children: int):
+    url = "https://ostrovok.ru/hotel/search/v1/site/reviews/"
+    params = {
+        "hotel": hotel_name,
+        "lang": "ru",
+        "page": 1,
+        "sort": "rate_desc",
+        "adults": adults,
+        "children": children,
+        "client_uid": "E4DBF44D76FE3067356C6A6902D6FB16"
+    }
+
+    response = requests.get(url, params=params)
+
+    return response.json()
