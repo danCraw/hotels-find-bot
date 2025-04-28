@@ -15,3 +15,4 @@ requests==2.28.2
 urllib3==1.26.15
 yarl==1.8.2
 python-dotenv==1.0.0
+pydantic==2.9.2

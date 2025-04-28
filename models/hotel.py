@@ -7,3 +7,7 @@ class Hotel(BaseModel):
     url: str | None
     hours: str | None
     phones: list[str] | None
+    rooms: int | None = 0
+
+class YaHotel(Hotel):
+    ya_id: str

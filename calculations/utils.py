@@ -2,9 +2,15 @@ import requests
 import json
 from config import YANDEX_GEOCODE_API_KEY, OPEN_ROUTE_SERVICE_API_KEY, YANDEX_SEARCH_ORGANIZATION_API, \
     YANDEX_SEARCH_ORGANIZATION_URL, OPEN_ROUTE_SERVICE_API_URL, YANDEX_GEOCODE_API_URL
-from models.hotel import Hotel
+from models.hotel import Hotel, YaHotel
 from models.point import Point
 from models.step import Step
+
+cancellation_map = {
+    "FULLY_REFUNDABLE": "Да",
+    "PARTIALLY_REFUNDABLE": "Частично",
+    "NON_REFUNDABLE": "Нет"
+}
 
 
 # def openrouteservice_city_geocoding(city: str) -> dict:
@@ -59,12 +65,12 @@ def yandex_city_geocoding(city: str) -> Point:
 def yandex_reverse_geocoding(lon: float, lat: float):
     REVERSE_GEOCODE_URL = f'https://geocode-maps.yandex.ru/1.x/?apikey={YANDEX_GEOCODE_API_KEY}&geocode={lon},{lat}&format=json'
     response = requests.request("GET", REVERSE_GEOCODE_URL)
-    
+
     with open('./calculations/path_data/reverse_geocoding.json', 'w') as outfile:
         outfile.write(response.text)
     all_data = json.loads(response.text)
     text = str(all_data['response']['GeoObjectCollection']['featureMember'][0]
-                 ['GeoObject']['metaDataProperty']['GeocoderMetaData']['text'])
+               ['GeoObject']['metaDataProperty']['GeocoderMetaData']['text'])
     return text
 
 
@@ -157,7 +163,7 @@ def find_coordinates_by_time(time: int, route_data: dict) -> Point:
     return point
 
 
-def find_hotel_by_coordinates(point: Point) -> list[Hotel]:
+def find_hotels_by_coordinates(point: Point) -> list[YaHotel]:
     """Find hotels by coordinates using yandex search organization API"""
 
     url = YANDEX_SEARCH_ORGANIZATION_URL
@@ -188,7 +194,8 @@ def find_hotel_by_coordinates(point: Point) -> list[Hotel]:
 
     for h in hotels_data:
         hotel_data = h.get('properties', {}).get('CompanyMetaData', {})
-        hotel_model = Hotel(
+        hotel_model = YaHotel(
+            ya_id=hotel_data.get('id'),
             name=hotel_data.get('name'),
             address=hotel_data.get('address'),
             url=hotel_data.get('url'),
@@ -200,35 +207,151 @@ def find_hotel_by_coordinates(point: Point) -> list[Hotel]:
 
     return hotels
 
-def get_ostrovok_hotels(hotels: list[Hotel]) -> list[dict]:
-    url = "https://ostrovok.ru/api/site/multicomplete.json"
 
-    ostrovok_hotels = []
+async def get_hotel_rooms(hotel_id, checkin_date, checkout_date, adults, children_ages=None):
+    token = "YANDEX_TRAVEL_OAUTH_TOKEN"
 
-    for hotel in hotels:
-        params = {
-            "query": hotel.name,
-            "locale": "ru"
-        }
+    url = "https://whitelabel.travel.yandex-net.ru/hotels/offers/"
 
-        response = requests.get(url, params=params)
-        ostrovok_hotel = response.json()['hotels'][0]
-        ostrovok_hotels.append(ostrovok_hotel)
-
-    return ostrovok_hotels
-
-async def find_rooms_by_params(hotel_name: str, adults: int, children: int):
-    url = "https://ostrovok.ru/hotel/search/v1/site/reviews/"
     params = {
-        "hotel": hotel_name,
-        "lang": "ru",
-        "page": 1,
-        "sort": "rate_desc",
+        "hotel_id": hotel_id,
+        "checkin_date": checkin_date,
+        "checkout_date": checkout_date,
         "adults": adults,
-        "children": children,
-        "client_uid": "E4DBF44D76FE3067356C6A6902D6FB16"
     }
 
-    response = requests.get(url, params=params)
+    if children_ages:
+        params["children_ages"] = ",".join(map(str, children_ages))
 
-    return response.json()
+    headers = {
+        "Authorization": f"OAuth {token}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("complete", False):
+            return data.get("rooms", [])
+        return []
+    except Exception as e:
+        print(f"Error fetching rooms: {e}")
+        return []
+
+
+async def get_hotel_booking_offer(offer_id, affiliate_clid=None):
+    base_url = f"https://whitelabel.travel.yandex-net.ru/hotels/booking/offers/{offer_id}"
+
+    params = {}
+    if affiliate_clid:
+        params["affiliate_clid"] = affiliate_clid
+
+    try:
+        response = requests.get(
+            url=base_url,
+            params=params,
+            headers={
+                "Accept": "application/json",
+                "User-Agent": "Python Hotel Booking Client"
+            }
+        )
+        return response
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
+        raise
+
+
+async def create_hotel_booking_order(
+        booking_token: str,
+        customer_email: str,
+        customer_phone: str,
+        guests: list[dict],
+        use_deferred_payments: bool = False,
+        comment: str = None,
+        promo_codes: list[str] = None
+) -> dict:
+    url = "https://whitelabel.travel.yandex-net.ru/hotels/booking/orders"
+
+    payload = {
+        "booking_token": booking_token,
+        "use_deferred_payments": use_deferred_payments,
+        "customer_email": customer_email,
+        "customer_phone": customer_phone,
+        "guests": guests
+    }
+
+    if comment:
+        payload["comment"] = comment
+    if promo_codes:
+        payload["promo_codes"] = promo_codes
+
+    try:
+        response = requests.post(
+            url=url,
+            json=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": "Python Hotel Booking Client"
+            }
+        )
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
+        raise
+
+
+async def start_hotel_booking_payment(
+        order_id: str,
+        return_url: str,
+        theme: str | None = "light",
+        device: str | None = "desktop"
+) -> dict:
+    url = f"https://whitelabel.travel.yandex-net.ru/hotels/booking/orders/{order_id}/payment/start"
+
+    payload = {
+        "return_url": return_url
+    }
+
+    if theme:
+        payload["theme"] = theme
+    if device:
+        payload["device"] = device
+
+    try:
+        response = requests.post(
+            url=url,
+            json=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": "Python Hotel Booking Client"
+            }
+        )
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        print(f"Payment start error: {e}")
+        raise
+
+
+async def get_hotel_booking_status(order_id: str) -> dict:
+    url = f"https://whitelabel.travel.yandex-net.ru/hotels/booking/orders/{order_id}/status"
+
+    try:
+        response = requests.get(
+            url=url,
+            headers={
+                "Accept": "application/json",
+                "User-Agent": "Python Hotel Booking Client"
+            }
+        )
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        print(f"Status check error: {e}")
+        raise
