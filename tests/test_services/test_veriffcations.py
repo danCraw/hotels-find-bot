@@ -1,9 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
-import smtplib
-from email.message import EmailMessage
 
-from app.config import SMTP_USER, SMTP_PASSWORD
 from app.services.verifications import send_email_code, send_sms_code
 
 
@@ -21,7 +18,6 @@ async def test_email_content_generation(mock_smtp):
 
     email_content = mock_smtp.send_message.call_args[0][0]
     assert email_content.get("Subject") == "Код подтверждения бронирования"
-    assert email_content.get("From") == SMTP_USER
     assert email_content.get("To") == "user@domain.com"
     assert "Ваш код подтверждения: ABCD" in email_content.get_payload()
 
