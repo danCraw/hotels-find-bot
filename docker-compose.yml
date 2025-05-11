@@ -6,5 +6,5 @@ services:
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
     volumes:
-      - .:/app  # Для разработки: синхронизация кода
+      - .:/app
     restart: unless-stopped
