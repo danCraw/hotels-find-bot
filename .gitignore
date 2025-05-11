@@ -5,7 +5,7 @@ __pycache__/
 *$py.class
 
 config
-calculations/path_data
+app/calculations/path_data
 
 # C extensions
 *.so
@@ -18,7 +18,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+app/lib/
 lib64/
 parts/
 sdist/
@@ -108,9 +108,9 @@ celerybeat.pid
 # Environments
 .env
 .venv
-env/
+.env/
 venv/
-ENV/
+.env/
 env.bak/
 venv.bak/
 
