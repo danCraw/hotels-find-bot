@@ -1,11 +1,8 @@
 from email.message import EmailMessage
 import smtplib
 
-from app.config import SMTP_USER, SMTP_PASSWORD
+from app.config import SMTP_USER, SMTP_PASSWORD, NOTISEND_PROJECT, NOTISEND_API_KEY
 from app.lib import notisend
-
-NOTISEND_PROJECT = 'hotels-find-bot'
-NOTISEND_API_KEY = '590aaaac792d2'
 
 
 async def send_email_code(email: str, code: str):

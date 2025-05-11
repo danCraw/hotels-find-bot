@@ -17,3 +17,6 @@ YANDEX_GEOCODE_API_URL='https://geocode-maps.yandex.ru/1.x/'
 
 SMTP_USER = os.getenv('SMTP_USER')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
+
+NOTISEND_PROJECT = os.getenv('NOTISEND_PROJECT')
+NOTISEND_API_KEY = os.getenv('NOTISEND_API_KEY')
