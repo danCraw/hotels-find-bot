@@ -1,1 +1,1 @@
-from app.keyboards.client import kb_client
+from app.keyboards.client import kb_client  # noqa

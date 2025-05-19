@@ -17,13 +17,13 @@ def message():
 @pytest.fixture
 def fsm_data():
     return {
-        'booking_email_code': '123456',
-        'booking_phone_code': '654321',
-        'email': 'test@example.com',
-        'phone': '+79991234567',
-        'codes_expire': int(time.time()) + 100,
-        'attempts_left': 3,
-        'offer_id': "123",
+        "booking_email_code": "123456",
+        "booking_phone_code": "654321",
+        "email": "test@example.com",
+        "phone": "+79991234567",
+        "codes_expire": int(time.time()) + 100,
+        "attempts_left": 3,
+        "offer_id": "123",
     }
 
 
@@ -47,9 +47,11 @@ async def test_verify_codes_success(mock_create_payment_link, message, state, fs
 
 @pytest.mark.asyncio
 async def test_verify_codes_expired(message, state, fsm_data):
-    fsm_data['codes_expire'] = int(time.time()) - 1
+    fsm_data["codes_expire"] = int(time.time()) - 1
     await verifications.verify_codes(message, state)
-    message.answer.assert_called_with("⌛ Время действия кодов истекло. Запросите новые.")
+    message.answer.assert_called_with(
+        "⌛ Время действия кодов истекло. Запросите новые."
+    )
 
 
 @pytest.mark.asyncio
@@ -65,23 +67,27 @@ async def test_verify_codes_wrong_codes(message, state, fsm_data):
 async def test_verify_codes_wrong_format(message, state, fsm_data):
     message.text = "123456 654321"
     await verifications.verify_codes(message, state)
-    message.answer.assert_any_call("❌ Неправильный формат. Используйте:\nEmail: 123456\nТелефон: 654321")
+    message.answer.assert_any_call(
+        "❌ Неправильный формат. Используйте:\nEmail: 123456\nТелефон: 654321"
+    )
 
 
 @pytest.mark.asyncio
 @patch("app.handlers.verifications.send_email_code", new_callable=AsyncMock)
 @patch("app.handlers.verifications.send_sms_code", new_callable=AsyncMock)
 async def test_resend_codes_success(mock_sms, mock_email, message, state, fsm_data):
-    fsm_data['last_resend_time'] = int(time.time()) - 40
+    fsm_data["last_resend_time"] = int(time.time()) - 40
     await verifications.resend_verification_codes(message, state)
-    message.answer.assert_called_with("✅ Новые коды отправлены! Проверьте почту и SMS.")
-    assert 'booking_email_code' in fsm_data
-    assert 'booking_phone_code' in fsm_data
-    assert 'codes_expire' in fsm_data
+    message.answer.assert_called_with(
+        "✅ Новые коды отправлены! Проверьте почту и SMS."
+    )
+    assert "booking_email_code" in fsm_data
+    assert "booking_phone_code" in fsm_data
+    assert "codes_expire" in fsm_data
 
 
 @pytest.mark.asyncio
 async def test_resend_codes_too_soon(message, state, fsm_data):
-    fsm_data['last_resend_time'] = int(time.time())
+    fsm_data["last_resend_time"] = int(time.time())
     await verifications.resend_verification_codes(message, state)
     assert "⏳ Повторная отправка будет доступна" in message.answer.call_args[0][0]

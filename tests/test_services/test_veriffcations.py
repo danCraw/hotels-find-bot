@@ -22,17 +22,15 @@ async def test_email_content_generation(mock_smtp):
     assert "Ваш код подтверждения: ABCD" in email_content.get_payload()
 
 
-@pytest.mark.parametrize("phone, code", [
-    ("+79001234567", "1234"),
-    ("+79998765432", "ZYXW"),
-    ("+77777777777", "1A2B3C")
-])
+@pytest.mark.parametrize(
+    "phone, code",
+    [("+79001234567", "1234"), ("+79998765432", "ZYXW"), ("+77777777777", "1A2B3C")],
+)
 @pytest.mark.asyncio
 async def test_different_formats(phone, code):
     with patch("app.lib.notisend.SMS") as mock_sms:
         mock_sms.return_value.sendSMS.return_value = MagicMock(sid="test")
         await send_sms_code(phone, code)
         mock_sms.return_value.sendSMS.assert_called_with(
-            recipients=phone,
-            message=f"Ваш код подтверждения: {code}"
+            recipients=phone, message=f"Ваш код подтверждения: {code}"
         )

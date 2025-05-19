@@ -7,14 +7,17 @@ from app.handlers.sessions import FSMClient
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("input_text, expected_reply, should_pass", [
-    ("abc", "Пожалуйста, введите корректное количество дней", False),
-    ("0", "Количество дней должно быть положительным числом", False),
-    ("-5", "Количество дней должно быть положительным числом", False),
-    ("101", "Слишком большое количество дней", False),
-    ("1", "Далее введите время", True),
-    ("7", "Далее введите время", True),
-])
+@pytest.mark.parametrize(
+    "input_text, expected_reply, should_pass",
+    [
+        ("abc", "Пожалуйста, введите корректное количество дней", False),
+        ("0", "Количество дней должно быть положительным числом", False),
+        ("-5", "Количество дней должно быть положительным числом", False),
+        ("101", "Слишком большое количество дней", False),
+        ("1", "Далее введите время", True),
+        ("7", "Далее введите время", True),
+    ],
+)
 async def test_process_days_of_stay(input_text, expected_reply, should_pass):
     message = AsyncMock(spec=Message)
     message.text = input_text

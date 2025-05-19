@@ -5,7 +5,7 @@ from app.models.step import Step
 cancellation_map = {
     "FULLY_REFUNDABLE": "Да",
     "PARTIALLY_REFUNDABLE": "Частично",
-    "NON_REFUNDABLE": "Нет"
+    "NON_REFUNDABLE": "Нет",
 }
 
 
@@ -14,13 +14,13 @@ def time_from_text_to_seconds(time: str):
     time_in_seconds = 0
     try:
         if len(words) == 2:  # 4 часа; 5 часов; 42 минуты; 50 минут
-            if words[1] == 'часа' or words[1] == 'часов':
+            if words[1] == "часа" or words[1] == "часов":
                 time_in_seconds = int(words[0]) * 3600
-            elif words[1] == 'минуты' or words[1] == 'минут':
+            elif words[1] == "минуты" or words[1] == "минут":
                 time_in_seconds = int(words[0]) * 60
         elif len(words) == 4:  # 4 часа 5 минут; 5 часов 42 минуты и тд
             time_in_seconds = int(words[0]) * 3600 + int(words[2]) * 60
-    except:
+    except Exception:
         raise Exception("Пожалуйста, введите данные в верном формате")
     finally:
         return time_in_seconds
@@ -30,8 +30,8 @@ def find_coordinates_by_time(time: int, route_data: dict) -> Point:
     """Find the coordinates of the point on the route by time"""
 
     cur_time = 0
-    path_steps: list[dict] = route_data['steps']
-    path_coords = route_data['coordinates']
+    path_steps: list[dict] = route_data["steps"]
+    path_coords = route_data["coordinates"]
 
     for step in path_steps:
         step_ = Step(**step)
@@ -52,7 +52,9 @@ def find_coordinates_by_time(time: int, route_data: dict) -> Point:
 
 
 async def get_hotel_booking_offer(offer_id, affiliate_clid=None):
-    base_url = f"https://whitelabel.travel.yandex-net.ru/hotels/booking/offers/{offer_id}"
+    base_url = (
+        f"https://whitelabel.travel.yandex-net.ru/hotels/booking/offers/{offer_id}"
+    )
 
     params = {}
     if affiliate_clid:
@@ -64,8 +66,8 @@ async def get_hotel_booking_offer(offer_id, affiliate_clid=None):
             params=params,
             headers={
                 "Accept": "application/json",
-                "User-Agent": "Python Hotel Booking Client"
-            }
+                "User-Agent": "Python Hotel Booking Client",
+            },
         )
         return response
 
@@ -75,13 +77,13 @@ async def get_hotel_booking_offer(offer_id, affiliate_clid=None):
 
 
 async def create_hotel_booking_order(
-        booking_token: str,
-        customer_email: str,
-        customer_phone: str,
-        guests: list[dict],
-        use_deferred_payments: bool = False,
-        comment: str = None,
-        promo_codes: list[str] = None
+    booking_token: str,
+    customer_email: str,
+    customer_phone: str,
+    guests: list[dict],
+    use_deferred_payments: bool = False,
+    comment: str = None,
+    promo_codes: list[str] = None,
 ) -> dict:
     url = "https://whitelabel.travel.yandex-net.ru/hotels/booking/orders"
 
@@ -90,7 +92,7 @@ async def create_hotel_booking_order(
         "use_deferred_payments": use_deferred_payments,
         "customer_email": customer_email,
         "customer_phone": customer_phone,
-        "guests": guests
+        "guests": guests,
     }
 
     if comment:
@@ -105,8 +107,8 @@ async def create_hotel_booking_order(
             headers={
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "User-Agent": "Python Hotel Booking Client"
-            }
+                "User-Agent": "Python Hotel Booking Client",
+            },
         )
         return response.json()
 
@@ -116,16 +118,14 @@ async def create_hotel_booking_order(
 
 
 async def start_hotel_booking_payment(
-        order_id: str,
-        return_url: str,
-        theme: str | None = "light",
-        device: str | None = "desktop"
+    order_id: str,
+    return_url: str,
+    theme: str | None = "light",
+    device: str | None = "desktop",
 ) -> dict:
     url = f"https://whitelabel.travel.yandex-net.ru/hotels/booking/orders/{order_id}/payment/start"
 
-    payload = {
-        "return_url": return_url
-    }
+    payload = {"return_url": return_url}
 
     if theme:
         payload["theme"] = theme
@@ -139,8 +139,8 @@ async def start_hotel_booking_payment(
             headers={
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "User-Agent": "Python Hotel Booking Client"
-            }
+                "User-Agent": "Python Hotel Booking Client",
+            },
         )
         return response.json()
 
@@ -157,8 +157,8 @@ async def get_hotel_booking_status(order_id: str) -> dict:
             url=url,
             headers={
                 "Accept": "application/json",
-                "User-Agent": "Python Hotel Booking Client"
-            }
+                "User-Agent": "Python Hotel Booking Client",
+            },
         )
         return response.json()
 

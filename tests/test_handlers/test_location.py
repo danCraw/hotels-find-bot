@@ -38,15 +38,18 @@ async def test_user_loc(mock_kb, message):
     message.text = "/start"
     await user_loc(message)
     message.answer.assert_called_with(
-        'Пожалуйста, введите город отправления '
+        "Пожалуйста, введите город отправления "
         'или поделитесь своей геопозицией, нажав на кнопку "📍 Отправить местоположение". '
         'Чтобы выйти, нажмите или нажмите "Отмена" ',
-        reply_markup="mock_kb"
+        reply_markup="mock_kb",
     )
 
 
 @pytest.mark.asyncio
-@patch("app.handlers.location.openrouteservice_reverse_geocoding", return_value="Санкт-Петербург")
+@patch(
+    "app.handlers.location.openrouteservice_reverse_geocoding",
+    return_value="Санкт-Петербург",
+)
 async def test_handle_location(mock_reverse_geo, message, state):
     message.location = Location(latitude=59.93, longitude=30.31)
     await handle_location(message, state)
@@ -61,7 +64,10 @@ async def test_handle_location(mock_reverse_geo, message, state):
 
 
 @pytest.mark.asyncio
-@patch("app.handlers.location.openrouteservice_city_geocoding", return_value=Point(lat=55.75, lon=37.62))
+@patch(
+    "app.handlers.location.openrouteservice_city_geocoding",
+    return_value=Point(lat=55.75, lon=37.62),
+)
 async def test_send_city(mock_geocode, message, state):
     message.text = "Москва"
     await send_city(message, state)

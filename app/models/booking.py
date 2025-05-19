@@ -9,6 +9,7 @@ class Guest:
     name: str
     age: int = None
 
+
 @dataclass
 class BookingData:
     departure: City

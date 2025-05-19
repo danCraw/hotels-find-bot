@@ -49,17 +49,13 @@ async def test_process_client_info_success(mock_sms, mock_email, message, state)
         "Введите коды в формате:\n"
         "Email: 123456\n"
         "Телефон: 654321",
-        reply_markup=message.answer.call_args_list[-1][1]["reply_markup"]
+        reply_markup=message.answer.call_args_list[-1][1]["reply_markup"],
     )
 
 
 @pytest.mark.asyncio
 async def test_process_client_info_invalid_phone(message, state):
-    message.text = (
-        "Телефон: 12345\n"
-        "Email: test@example.com\n"
-        "1. Иван Иванов"
-    )
+    message.text = "Телефон: 12345\n" "Email: test@example.com\n" "1. Иван Иванов"
 
     await process_client_info(message, state)
     message.answer.assert_called_with("❌ Неверный формат телефона")
@@ -67,11 +63,7 @@ async def test_process_client_info_invalid_phone(message, state):
 
 @pytest.mark.asyncio
 async def test_process_client_info_invalid_email(message, state):
-    message.text = (
-        "Телефон: +79123456789\n"
-        "Email: wrong_email\n"
-        "1. Иван Иванов"
-    )
+    message.text = "Телефон: +79123456789\n" "Email: wrong_email\n" "1. Иван Иванов"
 
     await process_client_info(message, state)
     message.answer.assert_called_with("❌ Неверный формат email")
@@ -82,24 +74,30 @@ async def test_process_client_info_missing_fields(message, state):
     message.text = "Просто текст без нужных данных"
 
     await process_client_info(message, state)
-    message.answer.assert_any_call("Некорректный формат данных. Пожалуйста, введите данные в формате:\n\n"
-                                   "номер телефона: +79123456789\n"
-                                   "e-mail: example@mail.com\n"
-                                   "1. Иван Иванов\n"
-                                   "2. Мария Иванова\n"
-                                   "3. Пётр Иванов ребёнок 5 лет")
+    message.answer.assert_any_call(
+        "Некорректный формат данных. Пожалуйста, введите данные в формате:\n\n"
+        "номер телефона: +79123456789\n"
+        "e-mail: example@mail.com\n"
+        "1. Иван Иванов\n"
+        "2. Мария Иванова\n"
+        "3. Пётр Иванов ребёнок 5 лет"
+    )
 
 
 @pytest.mark.asyncio
-@patch("app.handlers.client_info.send_email_code", new_callable=AsyncMock, side_effect=Exception("fail"))
+@patch(
+    "app.handlers.client_info.send_email_code",
+    new_callable=AsyncMock,
+    side_effect=Exception("fail"),
+)
 @patch("app.handlers.client_info.send_sms_code", new_callable=AsyncMock)
 async def test_process_client_info_send_error(mock_sms, mock_email, message, state):
     message.text = (
-        "Телефон: +79123456789\n"
-        "Email: test@example.com\n"
-        "1. Иван Иванов"
+        "Телефон: +79123456789\n" "Email: test@example.com\n" "1. Иван Иванов"
     )
 
     await process_client_info(message, state)
 
-    message.answer.assert_any_call("❌ Ошибка отправки кодов. Проверьте правильность данных и попробуйте снова.")
+    message.answer.assert_any_call(
+        "❌ Ошибка отправки кодов. Проверьте правильность данных и попробуйте снова."
+    )

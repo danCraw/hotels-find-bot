@@ -23,19 +23,16 @@ class TestTimeFromText:
     def test_empty_string(self):
         assert time_from_text_to_seconds("") == 0
 
+
 class TestFindCoordinatesByTime:
     @pytest.fixture
     def sample_route_data(self):
         return {
-            'steps': [
-                {'duration': 60, 'way_points': [0, 1]},
-                {'duration': 30, 'way_points': [1, 2]}
+            "steps": [
+                {"duration": 60, "way_points": [0, 1]},
+                {"duration": 30, "way_points": [1, 2]},
             ],
-            'coordinates': [
-                (0.0, 0.0),
-                (1.0, 1.0),
-                (2.0, 2.0)
-            ]
+            "coordinates": [(0.0, 0.0), (1.0, 1.0), (2.0, 2.0)],
         }
 
     def test_at_start(self, sample_route_data):

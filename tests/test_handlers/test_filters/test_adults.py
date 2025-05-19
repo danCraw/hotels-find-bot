@@ -1,20 +1,37 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
-from aiogram.types import Message, ReplyKeyboardMarkup
+from unittest.mock import AsyncMock
+from aiogram.types import Message
 
 from app.handlers.filters.adults import process_adults_input
 from app.handlers.sessions import FSMClient
 
 import types
+
 FSMClient.waiting_for_children = types.SimpleNamespace(set=AsyncMock())
 
+
 @pytest.mark.asyncio
-@pytest.mark.parametrize("text, expected_reply, should_set_state", [
-    ("0", "Количество взрослых должно быть положительным числом. Пожалуйста, введите снова:", False),
-    ("21", "Слишком большое количество взрослых. Максимум 20. Введите снова:", False),
-    ("abc", "Пожалуйста, введите корректное число (например: 1, 2, 3). Попробуйте снова:", False),
-    ("2", "Выберите количество детей или введите свой вариант:", True),
-])
+@pytest.mark.parametrize(
+    "text, expected_reply, should_set_state",
+    [
+        (
+            "0",
+            "Количество взрослых должно быть положительным числом. Пожалуйста, введите снова:",
+            False,
+        ),
+        (
+            "21",
+            "Слишком большое количество взрослых. Максимум 20. Введите снова:",
+            False,
+        ),
+        (
+            "abc",
+            "Пожалуйста, введите корректное число (например: 1, 2, 3). Попробуйте снова:",
+            False,
+        ),
+        ("2", "Выберите количество детей или введите свой вариант:", True),
+    ],
+)
 async def test_process_adults_input(text, expected_reply, should_set_state):
     message = AsyncMock(spec=Message)
     message.text = text
