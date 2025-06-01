@@ -68,4 +68,3 @@ async def go_back(message: types.Message, state: FSMContext):
     await state.set_state(prev_state)
 
     await message.answer("Возвращаемся назад")
-
