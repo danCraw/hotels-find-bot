@@ -49,3 +49,23 @@ async def new_search(message: types.Message, state: FSMContext):
         "Отлично! Начнём новый поиск отеля. Укажите своё местоположение или город отправления.",
         reply_markup=location_kb(),
     )
+
+
+@dp.message_handler(commands=["back"], state="*")
+async def go_back(message: types.Message, state: FSMContext):
+    """Go back one step in FSM state machine"""
+    current_state = await state.get_state()
+    if current_state is None:
+        await message.answer("Вы сейчас не в процессе диалога.")
+        return
+
+    try:
+        prev_state = await FSMClient.previous()
+    except ValueError:
+        await message.answer("Невозможно определить текущее состояние.")
+        return
+
+    await state.set_state(prev_state)
+
+    await message.answer("Возвращаемся назад")
+
